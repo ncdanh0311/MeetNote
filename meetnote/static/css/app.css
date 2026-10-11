@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Meeting Note Taker</title>
-<!-- Marked.js để render Markdown -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: -apple-system, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
@@ -275,6 +266,7 @@
     align-items: center;
     gap: 10px;
   }
+  #status.hidden { display: none; }
 
   .spinner {
     display: inline-block;
@@ -296,6 +288,40 @@
     box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     margin-bottom: 32px;
   }
+  .history-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    margin-bottom: 32px;
+  }
+  .history-card h2 { font-size: 1.15rem; margin-bottom: 16px; }
+  .job-history { list-style: none; }
+  .job-history li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid #eee;
+  }
+  .job-history .job-meta { min-width: 0; }
+  .job-history .job-filename {
+    display: block;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+  }
+  .job-history .job-date, .job-history .job-status {
+    color: #777;
+    font-size: 0.82rem;
+  }
+  .job-history .job-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .job-history a {
+    color: #d9480f;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
   .result-card h2 {
     font-size: 1.3rem;
     font-weight: 700;
@@ -316,6 +342,19 @@
     margin-bottom: 24px;
     width: fit-content;
   }
+  .result-downloads {
+    display: flex;
+    gap: 16px;
+    margin: -10px 0 20px;
+    flex-wrap: wrap;
+  }
+  .result-downloads a {
+    color: #d9480f;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .result-downloads a:hover { text-decoration: underline; }
   .tab-btn {
     padding: 10px 20px;
     border: none;
@@ -341,11 +380,12 @@
     display: block;
   }
 
-  /* Markdown rendered content */
+  /* Meeting minutes plain text */
   .md-content {
     line-height: 1.8;
     font-size: 0.95rem;
     color: #333;
+    white-space: pre-wrap;
   }
   .md-content h1 { font-size: 1.5rem; font-weight: 700; margin: 24px 0 12px; color: #1a1a2e; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
   .md-content h2 { font-size: 1.25rem; font-weight: 700; margin: 20px 0 10px; color: #1a1a2e; }
@@ -428,236 +468,9 @@
     .hero h1 { font-size: 2rem; }
     .main-content { padding: 0 16px 40px; }
     .upload-card, .result-card { padding: 24px; }
+    .history-card { padding: 24px; }
+    .job-history li { align-items: flex-start; flex-direction: column; }
     .stats-row { gap: 10px; }
     .stat-card { padding: 14px 18px; min-width: 100px; }
     .stat-card .stat-value { font-size: 1.4rem; }
   }
-</style>
-</head>
-<body>
-
-<!-- Navbar -->
-<nav class="navbar">
-  <div class="navbar-brand">
-    🎙️ <span>MeetNote</span> AI
-  </div>
-  <div class="navbar-links">
-    <span class="badge-ai">AI Local — phục vụ 24/7</span>
-  </div>
-</nav>
-
-<!-- Hero -->
-<section class="hero">
-  <h1>Ghi chú họp <em>nhanh hơn,</em><br>chính xác hơn với AI.</h1>
-  <p>
-    Tải lên file audio cuộc họp, được AI chuyển thành <strong>biên bản chi tiết</strong>
-    — chạy 100% local, không cần internet, <strong>riêng tư tuyệt đối</strong>.
-  </p>
-
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-value">100%</div>
-      <div class="stat-label">Local & Riêng tư</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">AI</div>
-      <div class="stat-label">Whisper + Gemma4:e2b</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">24/7</div>
-      <div class="stat-label">Sẵn sàng mọi lúc</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">7+</div>
-      <div class="stat-label">Định dạng hỗ trợ</div>
-    </div>
-  </div>
-</section>
-
-<!-- Main Content -->
-<div class="main-content">
-
-  <!-- Upload Card -->
-  <div class="upload-card">
-    <h2>📤 Tải lên file audio</h2>
-
-    <!-- Engine Selection -->
-    <div class="engine-selector">
-      <label class="engine-label">🤖 Chọn AI Transcribe:</label>
-      <div class="engine-options">
-        <label class="engine-option selected" data-engine="whisper">
-          <input type="radio" name="engine" value="whisper" checked>
-          <div class="engine-card">
-            <div class="engine-name">🐻 Whisper</div>
-            <div class="engine-desc">OpenAI Whisper — chính xác cao, cần GPU/RAM lớn</div>
-          </div>
-        </label>
-        <label class="engine-option" data-engine="gemma">
-          <input type="radio" name="engine" value="gemma">
-          <div class="engine-card">
-            <div class="engine-name">💎 Gemma 4 E2B</div>
-            <div class="engine-desc">Google Gemma — nhẹ, nhanh, chạy qua Ollama</div>
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <div id="drop-zone">
-      <div class="drop-icon">🎵</div>
-      <p><strong>Kéo thả file audio vào đây</strong></p>
-      <p>hoặc bấm để chọn file</p>
-      <p class="drop-hint">Hỗ trợ: mp3, wav, m4a, mp4, ogg, flac, webm — tối đa 2GB</p>
-      <input type="file" id="file-input" accept="audio/*,video/mp4" class="hidden">
-    </div>
-    <div style="text-align: center;">
-      <button class="btn-primary" id="upload-btn" disabled>
-        🚀 Tải lên & Xử lý
-      </button>
-    </div>
-    <div id="status" class="hidden"></div>
-  </div>
-
-  <!-- Result Card -->
-  <div class="result-card hidden" id="result-card">
-    <h2>📋 Kết quả</h2>
-
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="minutes">📝 Biên bản họp</button>
-      <button class="tab-btn" data-tab="transcript">🎤 Transcript</button>
-    </div>
-
-    <div class="tab-content active" id="tab-minutes">
-      <div class="md-content" id="minutes-output"></div>
-    </div>
-    <div class="tab-content" id="tab-transcript">
-      <div class="transcript-text" id="transcript-output"></div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-// Engine selection
-let selectedEngine = 'whisper';
-document.querySelectorAll('.engine-option').forEach(opt => {
-  opt.addEventListener('click', () => {
-    document.querySelectorAll('.engine-option').forEach(o => o.classList.remove('selected'));
-    opt.classList.add('selected');
-    opt.querySelector('input').checked = true;
-    selectedEngine = opt.dataset.engine;
-  });
-});
-
-// Tabs
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-// Upload logic
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
-const uploadBtn = document.getElementById('upload-btn');
-const statusEl = document.getElementById('status');
-const resultCard = document.getElementById('result-card');
-const minutesOutput = document.getElementById('minutes-output');
-const transcriptOutput = document.getElementById('transcript-output');
-
-let selectedFile = null;
-let pollTimer = null;
-
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', () => {
-  if (fileInput.files.length) setFile(fileInput.files[0]);
-});
-
-function setFile(file) {
-  selectedFile = file;
-  dropZone.innerHTML = `
-    <div class="drop-icon">✅</div>
-    <p><strong>${file.name}</strong></p>
-    <p style="color:#888; font-size:0.85rem;">${(file.size / 1024 / 1024).toFixed(1)} MB</p>
-  `;
-  uploadBtn.disabled = false;
-}
-
-uploadBtn.addEventListener('click', async () => {
-  if (!selectedFile) return;
-  uploadBtn.disabled = true;
-  resultCard.classList.add('hidden');
-  statusEl.classList.remove('hidden');
-  statusEl.innerHTML = '<span class="spinner"></span> Đang tải file lên...';
-
-  const formData = new FormData();
-  formData.append('file', selectedFile);
-  formData.append('engine', selectedEngine);
-
-  try {
-    const res = await fetch('/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-
-    if (!res.ok) {
-      statusEl.innerHTML = '❌ ' + (data.error || 'Có lỗi xảy ra');
-      uploadBtn.disabled = false;
-      return;
-    }
-
-    pollStatus(data.job_id);
-  } catch (err) {
-    statusEl.innerHTML = '❌ Lỗi kết nối tới server: ' + err.message;
-    uploadBtn.disabled = false;
-  }
-});
-
-function pollStatus(jobId) {
-  pollTimer = setInterval(async () => {
-    try {
-      const res = await fetch(`/status/${jobId}`);
-      const data = await res.json();
-
-      statusEl.innerHTML = `<span class="spinner"></span> ${data.message}`;
-
-      if (data.status === 'completed') {
-        clearInterval(pollTimer);
-        statusEl.innerHTML = '✅ Hoàn tất! Xem kết quả bên dưới.';
-        statusEl.style.background = '#eafbe7';
-        statusEl.style.color = '#2b8a3e';
-
-        // Render Markdown cho biên bản họp
-        minutesOutput.innerHTML = marked.parse(data.minutes || '');
-        transcriptOutput.textContent = data.transcript || '';
-
-        resultCard.classList.remove('hidden');
-        uploadBtn.disabled = false;
-      } else if (data.status === 'error') {
-        clearInterval(pollTimer);
-        statusEl.innerHTML = '❌ ' + data.message;
-        statusEl.style.background = '#fff0f0';
-        statusEl.style.color = '#c92a2a';
-        uploadBtn.disabled = false;
-      }
-    } catch (err) {
-      clearInterval(pollTimer);
-      statusEl.innerHTML = '❌ Mất kết nối tới server.';
-      statusEl.style.background = '#fff0f0';
-      statusEl.style.color = '#c92a2a';
-      uploadBtn.disabled = false;
-    }
-  }, 3000);
-}
-</script>
-
-</body>
-</html>

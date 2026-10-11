@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Meeting Note Taker</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    🎙️ <span>MeetNote</span> AI
+  </div>
+  <div class="navbar-links">
+    <span class="badge-ai">AI Local — phục vụ 24/7</span>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>Ghi chú họp <em>nhanh hơn,</em><br>chính xác hơn với AI.</h1>
+  <p>
+    Tải lên file audio cuộc họp để tạo <strong>biên bản chi tiết</strong>.
+    Xử lý trên máy của bạn; lần tải model đầu tiên cần internet.
+  </p>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">100%</div>
+      <div class="stat-label">Local & Riêng tư</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">AI</div>
+      <div class="stat-label">Whisper + Gemma4:e2b</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">24/7</div>
+      <div class="stat-label">Sẵn sàng mọi lúc</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">7+</div>
+      <div class="stat-label">Định dạng hỗ trợ</div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<div class="main-content">
+
+  <!-- Upload Card -->
+  <div class="upload-card">
+    <h2>📤 Tải lên file audio</h2>
+
+    <!-- Engine Selection -->
+    <div class="engine-selector">
+      <label class="engine-label">🤖 Chọn AI Transcribe:</label>
+      <div class="engine-options">
+        <label class="engine-option selected" data-engine="whisper">
+          <input type="radio" name="engine" value="whisper" checked>
+          <div class="engine-card">
+            <div class="engine-name">🐻 Whisper</div>
+            <div class="engine-desc">OpenAI Whisper — chính xác cao, cần GPU/RAM lớn</div>
+          </div>
+        </label>
+        <label class="engine-option" data-engine="gemma">
+          <input type="radio" name="engine" value="gemma">
+          <div class="engine-card">
+            <div class="engine-name">💎 Gemma 4 E2B</div>
+            <div class="engine-desc">Google Gemma — nhẹ, nhanh, chạy qua Ollama</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div id="drop-zone">
+      <div id="drop-prompt">
+        <div class="drop-icon">🎵</div>
+        <p><strong>Kéo thả file audio vào đây</strong></p>
+        <p>hoặc bấm để chọn file</p>
+        <p class="drop-hint">Hỗ trợ: mp3, wav, m4a, mp4, ogg, flac, webm — tối đa 2GB</p>
+      </div>
+      <input type="file" id="file-input" accept="audio/*,video/mp4" class="hidden">
+      <div id="selected-file" class="hidden" aria-live="polite">
+        <div class="drop-icon">✅</div>
+        <p><strong id="selected-file-name"></strong></p>
+        <p id="selected-file-size" class="drop-hint"></p>
+      </div>
+    </div>
+    <div style="text-align: center;">
+      <button class="btn-primary" id="upload-btn" disabled>
+        🚀 Tải lên & Xử lý
+      </button>
+    </div>
+    <div id="status" class="hidden" role="status" aria-live="polite"></div>
+  </div>
+
+  <section class="history-card hidden" id="history-card">
+    <h2>🕘 Cuộc họp gần đây</h2>
+    <ul id="job-history" class="job-history"></ul>
+  </section>
+
+  <!-- Result Card -->
+  <div class="result-card hidden" id="result-card">
+    <h2>📋 Kết quả</h2>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="minutes">📝 Biên bản họp</button>
+      <button class="tab-btn" data-tab="transcript">🎤 Transcript</button>
+    </div>
+
+    <div class="result-downloads">
+      <a id="download-minutes" class="hidden">Tải biên bản (.md)</a>
+      <a id="download-transcript" class="hidden">Tải transcript (.txt)</a>
+    </div>
+
+    <div class="tab-content active" id="tab-minutes">
+      <div class="md-content" id="minutes-output"></div>
+    </div>
+    <div class="tab-content" id="tab-transcript">
+      <div class="transcript-text" id="transcript-output"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+
+</body>
+</html>
